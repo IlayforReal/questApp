@@ -66,12 +66,6 @@ const Login = () => {
           onPress={() => router.replace('dashboard')}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 18, textAlign:'center', marginTop: 20, marginBottom: 10, color: 'black'}}>OR</Text>
-        <View style={styles.iconContainer}>
-          <FontAwesome5 name="facebook" size={24} color="white" style={styles.iconSpacing} />
-          <AntDesign name="google" size={24} color="white" style={styles.iconSpacing} />
-          <FontAwesome name="telegram" size={24} color="white" style={styles.iconSpacing} />
-        </View>
         <Text style={styles.footerText}>
           Don't you have an account?{' '}
           <Text style={styles.link} onPress={() => router.push('register')}>

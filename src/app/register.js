@@ -1,7 +1,10 @@
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { getDatabase, ref, push, set } from 'firebase/database'; // Import necessary functions
+import app from '../../firebase'; // Go up two levels if firebase.js is directly in the root
+
+
 
 const Register = () => {
   const router = useRouter();
@@ -12,6 +15,28 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const saveData = async () => {
+    // Get database reference
+    const db = getDatabase(app);
+    const userRef = ref(db, 'users/'); // You can modify this path as needed
+
+    const newUserRef = push(userRef); // Add a new entry under 'users'
+    set(newUserRef, {
+      firstName,
+      lastName,
+      age,
+      phoneNumber,
+      email,
+      password,
+    }).then(() => {
+      Alert.alert('Registration successful');
+      router.push('account');  // Navigate to the next screen
+    }).catch((error) => {
+      console.error("Error writing to database:", error);
+      Alert.alert('Error saving data', error.message);
+    });
+  };
 
   const handleRegister = async () => {
     const userData = { firstName, lastName, age, phoneNumber, email, password, confirmPassword };
@@ -27,19 +52,8 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://192.168.1.19:5000/api/user/register', {  // Make sure the IP matches your backend server
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        alert('Registration successful');
-        router.push('account');  // Navigate to the next screen
-      } else {
-        alert(data.message || 'Something went wrong');
-      }
+      // Save data to Firebase Realtime Database
+      await saveData();
     } catch (error) {
       console.error(error);
       alert('Error during registration');

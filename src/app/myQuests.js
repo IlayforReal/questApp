@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { getDatabase, ref, onValue, remove, update } from 'firebase/database';
-import { app } from '../../../../firebase'; // Import the initialized app from firebase.js
+import { app } from '../../firebase'; // Import the initialized app from firebase.js
 
-const Home = () => {
+
+const MyQuests = () => {
   const [quests, setQuests] = useState([]);
   const [editTask, setEditTask] = useState(null); // State to store task being edited
   const [updatedTitle, setUpdatedTitle] = useState('');
@@ -36,7 +37,53 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
+  // Handle Delete Task
+  const handleDelete = (taskId) => {
+    const db = getDatabase(app);
+    const taskRef = ref(db, `quests/${taskId}`); // Corrected string interpolation
+  
+    // Remove task from Firebase
+    remove(taskRef)
+      .then(() => {
+        // Remove task from local state
+        setQuests(quests.filter(task => task.id !== taskId));
+        Alert.alert("Success", "Task deleted successfully!");
+      })
+      .catch((error) => {
+        console.error("Error deleting task:", error);
+        Alert.alert("Error", "Failed to delete the task.");
+      });
+  };
+  
 
+  // Handle Update Task
+  const handleUpdate = () => {
+    if (!updatedTitle || !updatedContent) {
+      Alert.alert("Error", "Please fill out both the title and content.");
+      return;
+    }
+  
+    const db = getDatabase(app);
+    const taskRef = ref(db, `quests/${editTask.id}`); // Corrected string interpolation
+  
+    // Update task in Firebase
+    update(taskRef, {
+      title: updatedTitle,
+      content: updatedContent,
+    })
+      .then(() => {
+        // Update local state with new task details
+        setQuests(quests.map(task => task.id === editTask.id ? { ...task, title: updatedTitle, content: updatedContent } : task));
+        setEditTask(null); // Close the edit mode
+        setUpdatedTitle('');
+        setUpdatedContent('');
+        Alert.alert("Success", "Task updated successfully!");
+      })
+      .catch((error) => {
+        console.error("Error updating task:", error);
+        Alert.alert("Error", "Failed to update the task.");
+      });
+  };
   
 
   return (
@@ -90,8 +137,25 @@ const Home = () => {
               </View>
               <Text style={styles.taskLabel}>{task.content}</Text>
 
-            
-              
+              {/* Edit and Delete buttons */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={styles.editButton} 
+                  onPress={() => {
+                    setEditTask(task);
+                    setUpdatedTitle(task.title);
+                    setUpdatedContent(task.content);
+                  }}
+                >
+                  <Text style={styles.buttonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.deleteButton} 
+                  onPress={() => handleDelete(task.id)}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))}
         </View>
@@ -230,4 +294,4 @@ const styles = StyleSheet.create({
     },
   });  
 
-export default Home;
+export default MyQuests;
