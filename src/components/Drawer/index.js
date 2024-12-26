@@ -1,38 +1,73 @@
-import React from 'react';
-import { useRouter } from 'expo-router';
-import { Text, StyleSheet, TouchableOpacity, Image, View } from 'react-native';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
+import { Text, StyleSheet, TouchableOpacity, Image, View } from "react-native";
+import { DrawerContentScrollView } from "@react-navigation/drawer";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Ensure AsyncStorage is imported
+import { onAuthStateChanged } from "firebase/auth"; // Import Firebase Authentication
+import { auth } from "../../../firebase"; // Import your Firebase auth instance
 
 const DrawerContent = () => {
+  const [user, setUser] = useState(null); // State to store user info
   const router = useRouter();
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({
+          name: currentUser.displayName || "Guest", // Use displayName or default to "Guest"
+          profilePicture:
+            currentUser.photoURL ||
+            "https://randomuser.me/api/portraits/women/3.jpg", // Default profile picture
+        });
+      } else {
+        setUser(null); // Set user to null if no user is logged in
+      }
+    });
+
+    // Clean up the subscription on component unmount
+    return () => unsubscribe();
+  }, []);
+
   // Logout function - to handle logout
-  const handleLogout = () => {
-    // Clear any relevant session or state here
-    console.log('Logging out...');
-    router.push('/Login'); // Redirect to the Login screen
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("token"); // Remove token from AsyncStorage
+      console.log("Logged out successfully");
+      router.replace("/"); // Redirect to Login screen (assuming the login page is at the root `/`)
+    } catch (error) {
+      console.error("Error during logout", error);
+    }
   };
+
+  if (!user) {
+    return (
+      <DrawerContentScrollView contentContainerStyle={styles.container}>
+        {/* You can show a placeholder or a loading spinner until the user is authenticated */}
+        <Text>Loading user info...</Text>
+      </DrawerContentScrollView>
+    );
+  }
 
   return (
     <DrawerContentScrollView contentContainerStyle={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/3.jpg' }}
+          source={{ uri: user.profilePicture }}
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>Avril Mahinay</Text>
+        <Text style={styles.profileName}>{user.name}</Text>
         <Text style={styles.profilePosition}>Quest Taker</Text>
       </View>
 
       {/* Inbox */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => router.push('/Message')}
+        onPress={() => router.push("/message")}
       >
         <FontAwesome6 name="message" size={22} color="black" />
         <Text style={styles.drawerText}>Inbox</Text>
@@ -41,7 +76,7 @@ const DrawerContent = () => {
       {/* Track My Quests */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => router.push('/myQuests')}
+        onPress={() => router.push("/myQuests")}
       >
         <FontAwesome5 name="list" size={22} color="black" />
         <Text style={styles.drawerText}>Track My Quests</Text>
@@ -50,7 +85,7 @@ const DrawerContent = () => {
       {/* Settings */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => router.push('/Settings')}
+        onPress={() => router.push("/Settings")}
       >
         <Ionicons name="settings-outline" size={24} color="#333" />
         <Text style={styles.drawerText}>Settings</Text>
@@ -73,10 +108,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
     paddingVertical: 20,
-    backgroundColor: '#cbd2da', // Background color for profile section
+    backgroundColor: "#cbd2da", // Background color for profile section
   },
   profileImage: {
     width: 80,
@@ -86,29 +121,29 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   profilePosition: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   drawerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 15,
   },
   drawerText: {
     marginLeft: 15,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   logoutButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20, // Distance from the bottom of the screen
-    left: 15,   // Align with other drawer items
-    right: 15,  // Maintain padding consistency
+    left: 15, // Align with other drawer items
+    right: 15, // Maintain padding consistency
   },
 });
 
