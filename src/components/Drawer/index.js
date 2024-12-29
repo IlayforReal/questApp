@@ -4,40 +4,37 @@ import { Text, StyleSheet, TouchableOpacity, Image, View } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Ensure AsyncStorage is imported
-import { onAuthStateChanged } from "firebase/auth"; // Import Firebase Authentication
-import { auth } from "../../../firebase"; // Import your Firebase auth instance
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../../firebase";
 
 const DrawerContent = () => {
-  const [user, setUser] = useState(null); // State to store user info
+  const [user, setUser] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser({
-          name: currentUser.displayName || "Guest", // Use displayName or default to "Guest"
+          name: currentUser.displayName || "Guest",
           profilePicture:
             currentUser.photoURL ||
-            "https://randomuser.me/api/portraits/women/3.jpg", // Default profile picture
+            "https://randomuser.me/api/portraits/women/3.jpg",
         });
       } else {
-        setUser(null); // Set user to null if no user is logged in
+        setUser(null);
       }
     });
 
-    // Clean up the subscription on component unmount
     return () => unsubscribe();
   }, []);
 
-  // Logout function - to handle logout
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("token"); // Remove token from AsyncStorage
+      await AsyncStorage.removeItem("token");
       console.log("Logged out successfully");
-      router.replace("/"); // Redirect to Login screen (assuming the login page is at the root `/`)
+      router.replace("/");
     } catch (error) {
       console.error("Error during logout", error);
     }
@@ -46,7 +43,6 @@ const DrawerContent = () => {
   if (!user) {
     return (
       <DrawerContentScrollView contentContainerStyle={styles.container}>
-        {/* You can show a placeholder or a loading spinner until the user is authenticated */}
         <Text>Loading user info...</Text>
       </DrawerContentScrollView>
     );
@@ -54,7 +50,6 @@ const DrawerContent = () => {
 
   return (
     <DrawerContentScrollView contentContainerStyle={styles.container}>
-      {/* Profile Section */}
       <View style={styles.profileSection}>
         <Image
           source={{ uri: user.profilePicture }}
@@ -64,16 +59,14 @@ const DrawerContent = () => {
         <Text style={styles.profilePosition}>Quest Taker</Text>
       </View>
 
-      {/* Inbox */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => router.push("/message")}
+        onPress={() => router.push("/Inbox")}
       >
-        <FontAwesome6 name="message" size={22} color="black" />
+        <Icon name="inbox" size={22} color="black" />
         <Text style={styles.drawerText}>Inbox</Text>
       </TouchableOpacity>
 
-      {/* Track My Quests */}
       <TouchableOpacity
         style={styles.drawerItem}
         onPress={() => router.push("/myQuests")}
@@ -82,16 +75,14 @@ const DrawerContent = () => {
         <Text style={styles.drawerText}>Track My Quests</Text>
       </TouchableOpacity>
 
-      {/* Settings */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => router.push("/Settings")}
+        onPress={() => router.push("/settings")}
       >
         <Ionicons name="settings-outline" size={24} color="#333" />
         <Text style={styles.drawerText}>Settings</Text>
       </TouchableOpacity>
 
-      {/* Logout */}
       <TouchableOpacity
         style={[styles.drawerItem, styles.logoutButton]}
         onPress={handleLogout}
@@ -111,7 +102,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     paddingVertical: 20,
-    backgroundColor: "#cbd2da", // Background color for profile section
+    backgroundColor: "#cbd2da",
   },
   profileImage: {
     width: 80,
@@ -141,9 +132,9 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     position: "absolute",
-    bottom: 20, // Distance from the bottom of the screen
-    left: 15, // Align with other drawer items
-    right: 15, // Maintain padding consistency
+    bottom: 20,
+    left: 15,
+    right: 15,
   },
 });
 

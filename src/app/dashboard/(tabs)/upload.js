@@ -29,17 +29,11 @@ const Upload = () => {
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || deadline;
 
-    // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split("T")[0]; // Current date in "YYYY-MM-DD"
-
     const selectedDateString = selectedDate.toISOString().split("T")[0]; // Format selected date as "YYYY-MM-DD"
 
     if (selectedDateString < today) {
-      // If selected date is in the past, show alert and reset deadline
-      Alert.alert(
-        "Invalid Date",
-        "The deadline must be today or in the future."
-      );
+      Alert.alert("Invalid Date", "The deadline must be today or in the future.");
       setDeadline(today); // Set to today's date
     } else {
       setDeadline(selectedDate.toLocaleDateString()); // Set the selected date as the deadline
@@ -49,39 +43,27 @@ const Upload = () => {
   };
 
   const handleAmountChange = (text) => {
-    // Only allow digits (0-9)
-    let numericText = text.replace(/[^0-9]/g, ""); // This regex removes all non-numeric characters
-
-    // Ensure the amount is at least 50
-    if (numericText && parseInt(numericText) < 50) {
-      numericText = "50"; // Set minimum amount to 50 if the value is below it
-      Alert.alert("Minimum amount", "The amount must be at least 50 pesos.");
-    }
-
-    setAmount(numericText); // Update the amount with the cleaned-up string
+    const numericText = text.replace(/[^0-9]/g, ""); // Only allow digits
+    setAmount(numericText); // Update the amount
   };
 
   const handlePost = async () => {
-    if (
-      !postContent.trim() ||
-      !skillRequired.trim() ||
-      !deadline.trim() ||
-      !amount.trim() ||
-      !category.trim() ||
-      !referenceNumber.trim()
-    ) {
+    if (!postContent.trim() || !skillRequired.trim() || !deadline.trim() || !amount.trim() || !category.trim() || !referenceNumber.trim()) {
       Alert.alert("Error", "Please fill in all fields!");
       return;
     }
 
-    // Check if the reference number is exactly 13 digits
+    if (parseInt(amount) < 50) {
+      Alert.alert("Error", "The amount must be at least 50 pesos!");
+      return;
+    }
+
     const referenceNumberRegex = /^\d{13}$/; // Regex to match a 13-digit number
     if (!referenceNumberRegex.test(referenceNumber.trim())) {
       Alert.alert("Error", "GCash reference number must be exactly 13 digits!");
       return;
     }
 
-    // Fetch the current user's display name and user ID from Firebase Authentication
     const auth = getAuth(app);
     const user = auth.currentUser;
 
@@ -94,11 +76,11 @@ const Upload = () => {
     const userId = user.uid; // Get the current user's UID
 
     setLoading(true); // Start loading indicator
-    const db = getDatabase(app); // Use the imported app (already initialized)
-    const newQuestRef = push(ref(db, "quests")); // Save to the "quests" path
+    const db = getDatabase(app);
+    const newQuestRef = push(ref(db, "quests"));
 
     try {
-      const questId = newQuestRef.key; // Get the unique key for the quest
+      const questId = newQuestRef.key;
 
       await set(newQuestRef, {
         content: postContent.trim(),
@@ -107,27 +89,29 @@ const Upload = () => {
         amount: amount.trim(),
         category: category.trim(),
         createdAt: new Date().toISOString(),
-        status: "pending", // Optional field
-        displayName: displayName, // Add the displayName of the user who posted the quest
-        userId: userId, // Store the user ID of the person who posted the quest
-        questId: questId, // Store the questId
-        referenceNumber: referenceNumber.trim(), // Store the reference number
+        status: "pending",
+        displayName: displayName,
+        userId: userId,
+        questId: questId,
+        referenceNumber: referenceNumber.trim(),
       });
+
       Alert.alert(
         "Success",
-        "Quest posted successfully! This will be evaluated by Admin and will be deleted if found invalid."
+        "Your quest has been submitted successfully! It will be reviewed by the Admin, and you will be notified once the review is complete."
       );
-      setPostContent(""); // Clear content field
-      setSkillRequired(""); // Clear skill field
-      setDeadline(""); // Clear deadline field
-      setAmount(""); // Clear amount field
-      setCategory(""); // Clear category field
-      setReferenceNumber(""); // Clear reference number field
+
+      setPostContent("");
+      setSkillRequired("");
+      setDeadline("");
+      setAmount("");
+      setCategory("");
+      setReferenceNumber("");
     } catch (err) {
       Alert.alert("Error", err.message);
-      console.error("Error saving data:", err); // Log error for debugging
+      console.error("Error saving data:", err);
     } finally {
-      setLoading(false); // Stop loading indicator
+      setLoading(false);
     }
   };
 
@@ -166,7 +150,7 @@ const Upload = () => {
               style={[
                 styles.filterBox,
                 category === cat && styles.selectedCategory,
-              ]} // Highlight selected category
+              ]}
               onPress={() => setCategory(cat)}
             >
               <Text style={styles.label}>{cat}</Text>
@@ -214,8 +198,8 @@ const Upload = () => {
             placeholder="Amount"
             placeholderTextColor="#888"
             value={amount}
-            onChangeText={handleAmountChange} // Use the custom handler here
-            keyboardType="numeric" // This will show the numeric keyboard on mobile devices
+            onChangeText={handleAmountChange}
+            keyboardType="numeric"
           />
         </View>
 
@@ -236,12 +220,12 @@ const Upload = () => {
         <Text style={styles.gCashInfo}>GCash Account: {gCashAccount}</Text>
 
         <TouchableOpacity
-          style={[styles.postButton, loading && { opacity: 0.5 }]} // Dim button during loading
+          style={[styles.postButton, loading && { opacity: 0.5 }]}
           onPress={handlePost}
-          disabled={loading} // Disable button while loading
+          disabled={loading}
         >
           <Text style={styles.postButtonText}>
-            {loading ? "Saving..." : "Post"} {/* Show saving text */}
+            {loading ? "Saving..." : "Post"}
           </Text>
         </TouchableOpacity>
       </View>

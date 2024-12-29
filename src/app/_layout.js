@@ -19,40 +19,18 @@ const RootLayout = () => {
             headerTintColor: "white", // Consistent header text color
           }}
         >
+          {/* Stack Screens (Your existing stack-based navigation) */}
           <Stack.Screen name="index" options={{ headerShown: false }} />
-
           <Stack.Screen name="register" options={{ title: "Registration" }} />
-
-          <Stack.Screen
-            name="recover"
-            options={{ title: "Recover Password" }}
-          />
-
+          <Stack.Screen name="recover" options={{ title: "Recover Password" }} />
           <Stack.Screen name="reset" options={{ title: "Reset Password" }} />
-
           <Stack.Screen name="set" options={{ title: "Set New Password" }} />
-
           <Stack.Screen name="complete" options={{ title: "Complete" }} />
-
           <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-
-          <Stack.Screen
-            name="account"
-            options={{ title: "Account Information" }}
-          />
-
-          <Stack.Screen
-            name="verification"
-            options={{ title: "ID Verification" }}
-          />
-
-          {/* Instead of component prop, use direct routing for MyQuests */}
+          <Stack.Screen name="account" options={{ title: "Account Information" }} />
           <Stack.Screen name="myQuests" options={{ title: "My Quests" }} />
-
-          <Stack.Screen
-            name="conversation"
-            options={{ title: "Conversation" }}
-          />
+          <Stack.Screen name="conversation" options={{ title: "Conversation" }} />
+          <Stack.Screen name="settings" options={{ title: "Settings" }} />
         </Stack>
       </SafeAreaProvider>
     </PaperProvider>
