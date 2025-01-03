@@ -7,69 +7,99 @@ import {
   TextInput,
   ScrollView,
   Modal,
+  Alert, // Import Alert API
 } from "react-native";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, push } from "firebase/database";
 import { app } from "../../../../firebase"; // Import the initialized app from firebase.js
 import { useRouter } from "expo-router"; // Import useRouter for navigation
+import { getAuth } from "firebase/auth"; // For getting the current user
 
 const Home = () => {
-  const [quests, setQuests] = useState([]);
+  const [quests, setQuests] = useState([]); // State to store quests
   const [selectedQuest, setSelectedQuest] = useState(null); // State to store selected quest details
   const [searchQuery, setSearchQuery] = useState(""); // State to store search query
+  const [selectedCategory, setSelectedCategory] = useState("ALL"); // State for the selected category
   const router = useRouter(); // Router instance for navigation
+  const auth = getAuth(); // Firebase auth instance to get the current user
 
-  // Fetch quests from Firebase
+  const categories = [
+    "ALL",
+    "Personal",
+    "Event Assistant",
+    "Printing",
+    "Pick-up & Delivery",
+    "Lost & Found",
+    "Tutoring",
+  ];
+
   useEffect(() => {
     const db = getDatabase(app);
-    const questsRef = ref(db, "quests"); // Reference to the "quests" data path in Firebase
+    const questsRef = ref(db, "quests");
 
-    // Listen for changes to quests data
     const unsubscribe = onValue(questsRef, (snapshot) => {
       const data = snapshot.val();
       const questList = [];
-
-      // Map through the data and push to questList array
       for (let key in data) {
         questList.push({
           id: key,
           ...data[key],
         });
       }
-
-      // Update state with fetched data
       setQuests(questList);
     });
 
-    // Clean up the listener when the component is unmounted
     return () => unsubscribe();
-  }, []); // Empty dependency array ensures this effect runs only once
+  }, []);
 
-  // Function to filter quests based on search query
   const filteredQuests = quests.filter((task) => {
     const searchText = searchQuery.toLowerCase();
     const taskTitle = task.title ? task.title.toLowerCase() : "";
     const taskContent = task.content ? task.content.toLowerCase() : "";
 
-    return taskTitle.includes(searchText) || taskContent.includes(searchText);
+    const matchesSearch = taskTitle.includes(searchText) || taskContent.includes(searchText);
+    const matchesCategory =
+      selectedCategory === "ALL" || task.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
   });
 
-  // Handle selecting a quest
   const handleSelectQuest = (quest) => {
     setSelectedQuest(quest);
   };
 
-  // Handle closing the details modal
   const closeDetailsModal = () => {
     setSelectedQuest(null);
   };
 
-  // Navigate to conversation page when "Interested" button is pressed
   const handleInterested = (quest) => {
-    router.push({
-      pathname: "/conversation", // Directly referencing the conversation file in the same directory
-      query: { questId: quest.id, userId: quest.userId }, // Pass quest ID and user ID to the conversation page
-    });
+    const db = getDatabase();
+    const notificationsRef = ref(db, "notifications");
+    const user = auth.currentUser;
+    const userName = user ? user.displayName : "Unknown User";
+
+    if (quest.userId !== user?.uid) {
+      push(notificationsRef, {
+        questId: quest.id,
+        questTitle: quest.title,
+        userId: user ? user.uid : "guest",
+        userName: userName,
+        status: "Pending",
+        ownerId: quest.userId,
+      });
+
+      // Show alert to confirm the action
+      Alert.alert(
+        "Interest Sent",
+        `You have expressed interest in "${quest.title}". The quest owner will be notified.`,
+        [
+          { text: "OK", onPress: () => console.log("OK Pressed") },
+          { text: "View Notifications", onPress: () => router.push("/Notifications") },
+        ]
+      );
+    } else {
+      Alert.alert("Action Not Allowed", "You can't express interest in your own quest!");
+    }
   };
 
   return (
@@ -80,15 +110,33 @@ const Home = () => {
           style={styles.searchInput}
           placeholder="Search for tasks..."
           placeholderTextColor="#888"
-          value={searchQuery} // Bind to the searchQuery state
-          onChangeText={(text) => setSearchQuery(text)} // Update the search query as user types
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
         />
-        <EvilIcons
-          name="search"
-          size={25}
-          color="black"
-          style={styles.searchIcon}
-        />
+        <EvilIcons name="search" size={25} color="black" style={styles.searchIcon} />
+      </View>
+
+      {/* Category buttons */}
+      <View style={styles.categoryContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[styles.categoryButton, selectedCategory === category && styles.selectedCategoryButton]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text
+                style={[styles.categoryText, selectedCategory === category && styles.selectedCategoryText]}
+              >
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Quest list */}
@@ -101,7 +149,7 @@ const Home = () => {
               <TouchableOpacity
                 key={task.id}
                 style={styles.taskBox}
-                onPress={() => handleSelectQuest(task)} // Open quest details on click
+                onPress={() => handleSelectQuest(task)}
               >
                 <View style={styles.row}>
                   <EvilIcons name="user" size={25} color="black" />
@@ -117,48 +165,21 @@ const Home = () => {
 
       {/* Modal for quest details */}
       {selectedQuest && (
-        <Modal
-          visible={true}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={closeDetailsModal}
-        >
+        <Modal visible={true} transparent={true} animationType="fade" onRequestClose={closeDetailsModal}>
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
               <Text style={styles.modalTitle}>{selectedQuest.title}</Text>
               <Text style={styles.modalContent}>{selectedQuest.content}</Text>
               <Text style={styles.modalPrice}>Php {selectedQuest.amount}</Text>
-
-              {/* Displaying additional details */}
-              {selectedQuest.category && (
-                <Text style={styles.modalDetails}>
-                  Category: {selectedQuest.category}
-                </Text>
-              )}
+              {selectedQuest.category && <Text style={styles.modalDetails}>Category: {selectedQuest.category}</Text>}
               {selectedQuest.skillRequired && (
-                <Text style={styles.modalDetails}>
-                  Skill Required: {selectedQuest.skillRequired}
-                </Text>
+                <Text style={styles.modalDetails}>Skill Required: {selectedQuest.skillRequired}</Text>
               )}
-              {selectedQuest.deadline && (
-                <Text style={styles.modalDetails}>
-                  Deadline: {selectedQuest.deadline}
-                </Text>
-              )}
-
-              {/* Close button */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={closeDetailsModal}
-              >
+              {selectedQuest.deadline && <Text style={styles.modalDetails}>Deadline: {selectedQuest.deadline}</Text>}
+              <TouchableOpacity style={styles.closeButton} onPress={closeDetailsModal}>
                 <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
-
-              {/* Interested button */}
-              <TouchableOpacity
-                style={styles.interestedButton}
-                onPress={() => handleInterested(selectedQuest)}
-              >
+              <TouchableOpacity style={styles.interestedButton} onPress={() => handleInterested(selectedQuest)}>
                 <Text style={styles.interestedButtonText}>Interested</Text>
               </TouchableOpacity>
             </View>
@@ -193,6 +214,28 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginLeft: 10,
+  },
+  categoryContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    marginHorizontal: 2,
+  },
+  categoryButton: {
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  selectedCategoryButton: {
+    backgroundColor: "#2c7c2c",
+  },
+  categoryText: {
+    color: "gray",
+    fontWeight: "bold",
+  },
+  selectedCategoryText: {
+    color: "white",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -239,7 +282,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContainer: {
     backgroundColor: "white",
@@ -249,44 +292,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalTitle: {
-    fontSize: 18,
     fontWeight: "bold",
+    fontSize: 20,
     marginBottom: 10,
   },
   modalContent: {
     fontSize: 16,
-    color: "gray",
     marginBottom: 10,
   },
   modalPrice: {
-    fontSize: 18,
+    fontWeight: "bold",
+    fontSize: 16,
     color: "#2c7c2c",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   modalDetails: {
     fontSize: 14,
     color: "gray",
-    marginBottom: 5,
+    marginBottom: 10,
   },
   closeButton: {
-    backgroundColor: "lightgray",
-    padding: 10,
+    backgroundColor: "#ff4d4d",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: 5,
     marginTop: 10,
   },
   closeButtonText: {
+    color: "white",
     fontSize: 16,
-    color: "#000",
   },
   interestedButton: {
-    backgroundColor: "#28a745",
-    padding: 10,
+    backgroundColor: "#2c7c2c",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: 5,
     marginTop: 10,
   },
   interestedButtonText: {
+    color: "white",
     fontSize: 16,
-    color: "#fff",
   },
 });
 

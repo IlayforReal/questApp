@@ -23,8 +23,7 @@ const Profile = () => {
         // If user is logged in, update the profile data
         setUserProfile({
           name: user.displayName || "No name available", // Fetch the name from Firebase Authentication
-          questPosition: "Quest Taker", // Example: Replace with dynamic data
-          rank: " | B", // Example: Replace with dynamic rank if needed
+          bio: "This is a placeholder bio", // Updated to bio field
           profilePicture:
             user.photoURL ||
             "https://www.pngall.com/wp-content/uploads/5/Profile-Avatar-PNG.png", // Default profile picture if none
@@ -176,7 +175,7 @@ const Profile = () => {
             />
           </View>
           <View style={styles.positionRankContainer}>
-            <Text style={styles.userPosition}>{userProfile.questPosition}</Text>
+            <Text style={styles.userPosition}>{userProfile.bio}</Text> {/* Updated to bio */}
             <Text style={styles.userRank}>{userProfile.rank}</Text>
           </View>
         </View>
@@ -201,20 +200,14 @@ const Profile = () => {
         <View style={styles.postsHeader}>
           <TouchableOpacity onPress={() => toggleTab("posts")}>
             <Text
-              style={[
-                styles.postsTitle,
-                activeTab === "posts" && styles.activeTab,
-              ]}
+              style={[styles.postsTitle, activeTab === "posts" && styles.activeTab]}
             >
               Portfolio
             </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => toggleTab("rates")}>
             <Text
-              style={[
-                styles.postsTitle,
-                activeTab === "rates" && styles.activeTab,
-              ]}
+              style={[styles.postsTitle, activeTab === "rates" && styles.activeTab]}
             >
               Rates
             </Text>
@@ -278,6 +271,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 15,
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   profilePicture: {
     width: 80,
@@ -288,59 +283,64 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   userName: {
-    fontSize: 30,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+  },
+  verifiedIcon: {
+    marginLeft: 5,
   },
   positionRankContainer: {
     flexDirection: "row",
-    marginTop: 5,
+    alignItems: "center",
   },
   userPosition: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#888",
-    marginRight: 5,
+    marginRight: 10,
   },
   userRank: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: "#888",
   },
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    paddingHorizontal: 15,
+    justifyContent: "space-around",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   statItem: {
     alignItems: "center",
-    justifyContent: "space-evenly",
   },
   statCount: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#888",
   },
   postsContainer: {
-    marginTop: 20,
-    paddingHorizontal: 15,
+    padding: 15,
   },
   postsHeader: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
+    marginBottom: 15,
   },
   postsTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    marginRight: 20,
   },
   activeTab: {
     color: "#0f3c73",
+    borderBottomWidth: 2,
+    borderBottomColor: "#0f3c73",
   },
   grid: {
     flexDirection: "row",
@@ -348,58 +348,54 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   gridImage: {
-    width: "30%",
-    height: 100,
+    width: "48%",
+    height: 150,
     marginBottom: 10,
-    borderRadius: 1,
   },
   ratesList: {
     marginTop: 20,
   },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  ratingText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+  rateStar: {
+    fontSize: 16,
+    color: "#f1c40f",
+  },
   feedbackTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 10,
+  },
+  rateItem: {
+    marginBottom: 15,
   },
   questGiverContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 1,
-    marginTop: 10,
-  },
-  userIcon: {
-    marginRight: 10,
-  },
-  questGiverName: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     marginBottom: 5,
   },
-  ratingText: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginRight: 10,
+  userIcon: {
+    marginRight: 5,
   },
-  rateStar: {
-    fontSize: 35,
-    color: "#f1c40f",
+  questGiverName: {
+    fontWeight: "bold",
   },
   ratingAndDateContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    right: 75,
+    justifyContent: "space-between",
+    marginBottom: 5,
   },
   rateDate: {
     fontSize: 12,
     color: "#888",
-    marginLeft: 10,
   },
 });
 

@@ -8,7 +8,7 @@ import { auth, db } from "../../firebase"; // Remove Firebase Storage import
 
 const Settings = () => {
   const [name, setName] = useState("");
-  const [questPosition, setQuestPosition] = useState("Quest Taker");
+  const [bio, setBio] = useState(""); // Replaced questPosition with bio
   const [profilePicture, setProfilePicture] = useState(""); // To store the local image URI
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,13 @@ const Settings = () => {
       if (user) {
         setName(user.displayName || "");
         setProfilePicture(user.photoURL || ""); // Load the existing photo URL
+        
+        // Retrieve bio from Realtime Database (or default to empty string)
+        const userRef = ref(db, `users/${user.uid}`);
+        userRef.once("value", (snapshot) => {
+          const userData = snapshot.val();
+          setBio(userData?.bio || ""); // Use existing bio if available
+        });
       } else {
         Alert.alert("Error", "No user is logged in. Please log in again.");
       }
@@ -75,11 +82,11 @@ const Settings = () => {
         photoURL, // Use the local URI or the existing photo URL
       });
 
-      // Update Realtime Database with the new name and quest position
+      // Update Realtime Database with the new name, bio, and profile picture
       const userRef = ref(db, `users/${user.uid}`);
       await update(userRef, {
         name,
-        questPosition,
+        bio, // Save the bio field in the database
         profilePicture: photoURL, // Save the local URI or existing URL in the database
       });
 
@@ -124,9 +131,9 @@ const Settings = () => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Quest Position"
-        value={questPosition}
-        onChangeText={setQuestPosition}
+        placeholder="Bio"
+        value={bio} // Using the bio value here
+        onChangeText={setBio} // Update the bio state
       />
 
       {/* Save Button */}

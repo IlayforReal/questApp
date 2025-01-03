@@ -20,7 +20,8 @@ const DrawerContent = () => {
           name: currentUser.displayName || "Guest",
           profilePicture:
             currentUser.photoURL ||
-            "https://randomuser.me/api/portraits/women/3.jpg",
+            "https://randomuser.me/api/portraits/women/3.jpg", // Default image if no profile photo exists
+          bio: currentUser.bio || "No bio available", // Assuming bio is available in the user's profile
         });
       } else {
         setUser(null);
@@ -34,7 +35,7 @@ const DrawerContent = () => {
     try {
       await AsyncStorage.removeItem("token");
       console.log("Logged out successfully");
-      router.replace("/");
+      router.replace("/"); // Redirect to home page after logout
     } catch (error) {
       console.error("Error during logout", error);
     }
@@ -52,11 +53,11 @@ const DrawerContent = () => {
     <DrawerContentScrollView contentContainerStyle={styles.container}>
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: user.profilePicture }}
+          source={{ uri: user.profilePicture }} // Use the profile picture URI from user object
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{user.name}</Text>
-        <Text style={styles.profilePosition}>Quest Taker</Text>
+        <Text style={styles.profileBio}>{user.bio}</Text> {/* Bio instead of position */}
       </View>
 
       <TouchableOpacity
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     paddingVertical: 20,
-    backgroundColor: "#cbd2da",
+    backgroundColor: "#cbd2da", // Adjust as per design preference
   },
   profileImage: {
     width: 80,
@@ -115,9 +116,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
-  profilePosition: {
+  profileBio: {
     fontSize: 14,
-    color: "#666",
+    color: "#666", // Adjust bio color if needed
   },
   drawerItem: {
     flexDirection: "row",

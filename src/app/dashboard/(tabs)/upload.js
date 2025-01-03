@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker"; // Import t
 import { getAuth } from "firebase/auth"; // Import Firebase Auth
 
 const Upload = () => {
+  const [questTitle, setQuestTitle] = useState(""); // For quest title
   const [postContent, setPostContent] = useState(""); // For task content
   const [skillRequired, setSkillRequired] = useState(""); // For skill required
   const [deadline, setDeadline] = useState(""); // For deadline
@@ -48,7 +49,7 @@ const Upload = () => {
   };
 
   const handlePost = async () => {
-    if (!postContent.trim() || !skillRequired.trim() || !deadline.trim() || !amount.trim() || !category.trim() || !referenceNumber.trim()) {
+    if (!questTitle.trim() || !postContent.trim() || !skillRequired.trim() || !deadline.trim() || !amount.trim() || !category.trim() || !referenceNumber.trim()) {
       Alert.alert("Error", "Please fill in all fields!");
       return;
     }
@@ -83,6 +84,7 @@ const Upload = () => {
       const questId = newQuestRef.key;
 
       await set(newQuestRef, {
+        title: questTitle.trim(), // Save the quest title
         content: postContent.trim(),
         skillRequired: skillRequired.trim(),
         deadline: deadline.trim(),
@@ -96,17 +98,15 @@ const Upload = () => {
         referenceNumber: referenceNumber.trim(),
       });
 
-      Alert.alert(
-        "Success",
-        "Your quest has been submitted successfully! It will be reviewed by the Admin, and you will be notified once the review is complete."
-      );
+      Alert.alert("Success", "Your quest has been submitted successfully!");
 
-      setPostContent("");
-      setSkillRequired("");
-      setDeadline("");
-      setAmount("");
-      setCategory("");
-      setReferenceNumber("");
+      setQuestTitle(""); // Reset quest title
+      setPostContent(""); // Reset task content
+      setSkillRequired(""); // Reset skill required
+      setDeadline(""); // Reset deadline
+      setAmount(""); // Reset amount
+      setCategory(""); // Reset category
+      setReferenceNumber(""); // Reset reference number
     } catch (err) {
       Alert.alert("Error", err.message);
       console.error("Error saving data:", err);
@@ -119,6 +119,14 @@ const Upload = () => {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Post Quest</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Quest title..."
+          placeholderTextColor="#888"
+          value={questTitle}
+          onChangeText={setQuestTitle}
+        />
 
         <TextInput
           style={styles.input}
@@ -137,20 +145,10 @@ const Upload = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterContainer}
         >
-          {[
-            "Personal",
-            "Event Assistant",
-            "Printing",
-            "Pick-up & Delivery",
-            "Lost & Found",
-            "Tutoring",
-          ].map((cat) => (
+          {["Personal", "Event Assistant", "Printing", "Pick-up & Delivery", "Lost & Found", "Tutoring"].map((cat) => (
             <TouchableOpacity
               key={cat}
-              style={[
-                styles.filterBox,
-                category === cat && styles.selectedCategory,
-              ]}
+              style={[styles.filterBox, category === cat && styles.selectedCategory]}
               onPress={() => setCategory(cat)}
             >
               <Text style={styles.label}>{cat}</Text>
